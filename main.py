@@ -17,16 +17,22 @@ cursor.execute("""
 conexao.commit()
 
 def buscarTarefas():
-    tarefas = cursor.execute("SELECT * FROM tarefas")
-    tarefas = tarefas.fetchall()
-
-    return tarefas
+    try:
+        tarefas = cursor.execute("SELECT * FROM tarefas")
+        tarefas = tarefas.fetchall()
+    
+        return tarefas
+    except sqlite3.Error as erro:
+        return False
 
 def alterarTarefa(idTarefa):
-    cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ?", (idTarefa,))
-    conexao.commit()
+    try:
+        cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ?", (idTarefa,))
+        conexao.commit()
 
-    return True
+        return True
+    except sqlite3.Error as erro:
+        return False
 
 while True:
     opcao = int(input("""======================
