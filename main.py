@@ -45,6 +45,19 @@ def alterarTarefa(idTarefa):
     except sqlite3.Error as erro:
         return False
 
+def deletarTarefa(idTarefa):
+    try:
+        tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
+        if tarefa is None:
+            return False
+        
+        cursor.execute("DELETE FROM tarefas WHERE pk_tarefa = ?", (idTarefa,))
+        conexao.commit()
+
+        return True
+    except sqlite3.Error as erro:
+        return False
+
 while True:
     opcao = int(input("""======================
 Lista de tarefas.
@@ -72,11 +85,14 @@ Escolha uma opção: """))
         case 2:
             tarefas = buscarTarefas()
 
+            if(len(tarefas) == 0):
+                print("Não há tarefas cadastradas.")
+
             for tarefa in tarefas:
                 print(f"{tarefa["pk_tarefa"]} - {tarefa["descricao"]} - { "Concluída" if tarefa["concluida"] == 1 else "Pendente" }")
 
         case 3:
-            tarefas = buscarTarefas()
+            tarefas = buscarTarefas(True)
 
             for tarefa in tarefas:
                 print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
@@ -88,4 +104,20 @@ Escolha uma opção: """))
             else:
                 print("Tarefa inexistente ou já concluída.\n")            
 
-conexao.close()
+        case 4:
+            tarefas = buscarTarefas()
+
+            for tarefa in tarefas:
+                print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
+
+            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para deletá-la: "))
+
+            if(deletarTarefa(tarefaSelecionada)):
+                print("Tarefa deletada com sucesso!\n")
+            else:
+                print("Tarefa inexistente ou já deletada.\n")      
+
+        case 5:
+            print("Programa encerrado.")
+            conexao.close()
+            break     
