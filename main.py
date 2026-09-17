@@ -39,6 +39,16 @@ Escolha uma opção: """))
                 print("Tarefa cadastrada.")
             except sqlite3.Error as erro:
                 print(f"Erro ao cadastrar tarefa: {erro}.")
+        case 2:
+                   try:
+                       tarefas = cursor.execute("SELECT * FROM tarefas")
        
+                       tarefas = tarefas.fetchall()
+       
+                       for tarefa in tarefas:
+                           print(f"{tarefa["pk_tarefa"]} - {tarefa["descricao"]} - { "Concluída" if tarefa["concluida"] == 1 else "Pendente" }")
+       
+                   except sqlite3.Error as erro:
+                       print(f"Erro ao buscar tarefas: {erro}.")
 
 conexao.close()
