@@ -45,6 +45,19 @@ def alterarTarefa(idTarefa):
     except sqlite3.Error as erro:
         return False
 
+def editarTarefa(idTarefa, descricaoTarefa):
+    try:
+        tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
+        if tarefa is None or tarefa["concluida"] == 1:
+            return False
+        
+        cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ? AND descricao = ?", (idTarefa, descricaoTarefa))
+        conexao.commit()
+
+        return True
+    except sqlite3.Error as erro:
+        return False
+
 def deletarTarefa(idTarefa):
     try:
         tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
@@ -67,7 +80,8 @@ Lista de tarefas.
 2 - Listar tarefas
 3 - Concluir tarefa
 4 - Excluir tarefa
-5 - Sair
+5 - Editar tarefa
+6 - Sair
 
 Escolha uma opção: """))
 
@@ -121,6 +135,21 @@ Escolha uma opção: """))
                 print("Tarefa inexistente ou já deletada.\n")      
 
         case 5:
+            tarefas = buscarTarefas(True)
+
+            print("\n\n")
+            for tarefa in tarefas:
+                print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
+
+            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para editá-la: "))
+
+            novaDescricao = input("Digite a nova descrição da tarefa: ")
+            
+            if(editarTarefa(tarefaSelecionada, novaDescricao)):
+                print("Tarefa editada com sucesso!\n")
+            else:
+                print("Erro ao editar.\n")            
+        case 6:
             print("Programa encerrado.")
             conexao.close()
             break     
