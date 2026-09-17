@@ -1,6 +1,7 @@
 import sqlite3
 
 conexao = sqlite3.connect("banco.db")
+conexao.row_factory = sqlite3.Row
 
 cursor = conexao.cursor()
 
@@ -13,6 +14,31 @@ cursor.execute("""
 """)
 
 conexao.commit()
-conexao.close()
 
-print("Configurado.")
+while True:
+    opcao = int(input("""======================
+Lista de tarefas.
+======================
+
+1- Adicionar tarefa
+2 - Listar tarefas
+3 - Concluir tarefa
+4 - Excluir tarefa
+5 - Sair
+
+Escolha uma opção: """))
+
+    match opcao:
+        case 1:
+            try:
+                tarefa = input("Digite a tarefa: ")
+                
+                cursor.execute("INSERT INTO tarefas (descricao) VALUES (?)", (tarefa,))
+                conexao.commit()
+    
+                print("Tarefa cadastrada.")
+            except sqlite3.Error as erro:
+                print(f"Erro ao cadastrar tarefa: {erro}.")
+       
+
+conexao.close()
