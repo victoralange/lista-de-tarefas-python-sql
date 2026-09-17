@@ -51,7 +51,11 @@ def editarTarefa(idTarefa, descricaoTarefa):
         if tarefa is None or tarefa["concluida"] == 1:
             return False
         
-        cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ? AND descricao = ?", (idTarefa, descricaoTarefa))
+        cursor.execute(
+            "UPDATE tarefas SET descricao = ? WHERE pk_tarefa = ?",
+            (descricaoTarefa, idTarefa)
+        )        
+
         conexao.commit()
 
         return True
