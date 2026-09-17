@@ -27,6 +27,10 @@ def buscarTarefas():
 
 def alterarTarefa(idTarefa):
     try:
+        tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
+        if tarefa is None:
+            return False
+        
         cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ?", (idTarefa,))
         conexao.commit()
 
