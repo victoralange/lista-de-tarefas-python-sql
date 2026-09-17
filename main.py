@@ -74,12 +74,13 @@ Escolha uma opção: """))
             for tarefa in tarefas:
                 print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
 
-            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para concluí-la."))
+            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para concluí-la: "))
 
-            if(math.nan(tarefaSelecionada)):
-                print("ID da tarefa inválido.")
+            if(alterarTarefa(tarefaSelecionada)):
+                print("Tarefa alterada com sucesso!\n")
+            else:
+                print("ID da tarefa inválido.\n")
 
-            alterarTarefa(tarefaSelecionada)
 
             
 
