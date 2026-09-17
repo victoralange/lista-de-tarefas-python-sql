@@ -16,19 +16,26 @@ cursor.execute("""
 
 conexao.commit()
 
-def buscarTarefas():
+def buscarTarefas(apenasPendentes=False):
     try:
-        tarefas = cursor.execute("SELECT * FROM tarefas")
-        tarefas = tarefas.fetchall()
-    
-        return tarefas
-    except sqlite3.Error as erro:
+        if apenasPendentes:
+            tarefas = cursor.execute(
+                "SELECT * FROM tarefas WHERE concluida = 0"
+            )
+        else:
+            tarefas = cursor.execute(
+                "SELECT * FROM tarefas"
+            )
+
+        return tarefas.fetchall()
+
+    except sqlite3.Error:
         return False
 
 def alterarTarefa(idTarefa):
     try:
         tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
-        if tarefa is None:
+        if tarefa is None or tarefa["concluida"] == 1:
             return False
         
         cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ?", (idTarefa,))
@@ -79,11 +86,6 @@ Escolha uma opção: """))
             if(alterarTarefa(tarefaSelecionada)):
                 print("Tarefa alterada com sucesso!\n")
             else:
-                print("ID da tarefa inválido.\n")
-
-
-            
-
-            
+                print("Tarefa inexistente ou já concluída.\n")            
 
 conexao.close()
