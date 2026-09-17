@@ -1,4 +1,5 @@
 import sqlite3
+import math
 
 conexao = sqlite3.connect("banco.db")
 conexao.row_factory = sqlite3.Row
@@ -14,6 +15,18 @@ cursor.execute("""
 """)
 
 conexao.commit()
+
+def buscarTarefas():
+    tarefas = cursor.execute("SELECT * FROM tarefas")
+    tarefas = tarefas.fetchall()
+
+    return tarefas
+
+def alterarTarefa(idTarefa):
+    cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ?", (idTarefa,))
+    conexao.commit()
+
+    return True
 
 while True:
     opcao = int(input("""======================
@@ -40,15 +53,26 @@ Escolha uma opção: """))
             except sqlite3.Error as erro:
                 print(f"Erro ao cadastrar tarefa: {erro}.")
         case 2:
-                   try:
-                       tarefas = cursor.execute("SELECT * FROM tarefas")
-       
-                       tarefas = tarefas.fetchall()
-       
-                       for tarefa in tarefas:
-                           print(f"{tarefa["pk_tarefa"]} - {tarefa["descricao"]} - { "Concluída" if tarefa["concluida"] == 1 else "Pendente" }")
-       
-                   except sqlite3.Error as erro:
-                       print(f"Erro ao buscar tarefas: {erro}.")
+            tarefas = buscarTarefas()
+
+            for tarefa in tarefas:
+                print(f"{tarefa["pk_tarefa"]} - {tarefa["descricao"]} - { "Concluída" if tarefa["concluida"] == 1 else "Pendente" }")
+
+        case 3:
+            tarefas = buscarTarefas()
+
+            for tarefa in tarefas:
+                print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
+
+            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para concluí-la."))
+
+            if(math.nan(tarefaSelecionada)):
+                print("ID da tarefa inválido.")
+
+            alterarTarefa(tarefaSelecionada)
+
+            
+
+            
 
 conexao.close()
