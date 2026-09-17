@@ -74,26 +74,29 @@ Escolha uma opção: """))
     match opcao:
         case 1:
             try:
-                tarefa = input("Digite a tarefa: ")
+                tarefa = input("\n\nDigite a tarefa: ")
                 
                 cursor.execute("INSERT INTO tarefas (descricao) VALUES (?)", (tarefa,))
                 conexao.commit()
     
-                print("Tarefa cadastrada.")
+                print("\nTarefa cadastrada.\n")
             except sqlite3.Error as erro:
-                print(f"Erro ao cadastrar tarefa: {erro}.")
+                print(f"\nErro ao cadastrar tarefa: {erro}.")
         case 2:
             tarefas = buscarTarefas()
 
             if(len(tarefas) == 0):
-                print("Não há tarefas cadastradas.")
+                print("\n\nNão há tarefas cadastradas.")
 
+            print("\n")
             for tarefa in tarefas:
                 print(f"{tarefa["pk_tarefa"]} - {tarefa["descricao"]} - { "Concluída" if tarefa["concluida"] == 1 else "Pendente" }")
 
+            print("\n")
         case 3:
             tarefas = buscarTarefas(True)
 
+            print("\n\n")
             for tarefa in tarefas:
                 print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
 
