@@ -35,7 +35,7 @@
                             ></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button type="button" class="btn btn-primary">
                             Cadastrar tarefa
                         </button>
                     </form>
@@ -49,8 +49,215 @@
                             Minhas tarefas
                         </h5>
                     </div>
+                    <div id="tarefas"></div>
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="editarModalLabel">Editar Tarefa</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="mb-3">
+                                <label for="descricaoEditar" class="form-label">
+                                    Descrição
+                                </label>
+    
+                                <textarea
+                                    class="form-control"
+                                    id="descricaoEditar"
+                                    name="descricao"
+                                    rows="3"
+                                    placeholder="Digite a descrição da tarefa..."
+                                ></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" onclick="editarTarefa()" class="btn btn-primary">Editar tarefa</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script>
+            let tarefaEditando = null;
+
+            const button = document.getElementsByTagName('form')[0].getElementsByTagName("button")[0];
+            const descricao = document.getElementsByTagName('form')[0].getElementsByTagName("textarea")[0];
+            const lista = document.getElementById("tarefas");
+            
+            async function listarTarefas(){
+                const response = await fetch('/api/tarefas');
+                const dados = await response.json()
+                
+                if(dados.sucesso == false) return false;
+                      
+                const tarefas = dados.tarefas;
+                lista.innerHTML = "";
+
+                tarefas.forEach(tarefa => {
+                    let tarefaDiv = document.createElement("div")
+                    tarefaDiv.innerHTML = `
+                        <div class="border rounded p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-medium">
+                                        ${tarefa["descricao"]}
+                                        ${tarefa["concluida"] == 1 ? `<span class="badge text-bg-primary">Concluída</span>` : `<span class="badge text-bg-secondary">Pendente</span>`}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    ${tarefa["concluida"] != 1 ? `<button type="button" onclick='concluirTarefa(${tarefa["pk_tarefa"]})' class="btn btn-sm btn-outline-success">
+                                        Marcar como concluída
+                                    </button>` : ''}
+                                    
+                                    <button type="button" onclick='abrirModal(${JSON.stringify(tarefa)})' class="btn btn-sm btn-outline-warning">
+                                        Editar
+                                    </button>
+
+                                    <button type="button" onclick="excluirTarefa(${tarefa.pk_tarefa})" class="btn btn-sm btn-outline-danger">
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`
+                    lista.appendChild(tarefaDiv);
+                });
+            }
+
+            async function excluirTarefa(id) {
+                const request = await fetch("/api/tarefa/" + id, {
+                    method: "DELETE"
+                });
+
+                const dados = await request.json();
+
+                if (dados.sucesso == false) {
+                    toast(dados.mensagem || "Erro ao excluir tarefa.", "danger");
+                    return;
+                }
+
+                toast("Tarefa excluída. #" + id, "success");
+
+                listarTarefas();
+            }
+
+            async function concluirTarefa(id) {
+                const request = await fetch("/api/tarefa/" + id + '/concluir', {
+                    method: "PUT"
+                });
+
+                const dados = await request.json();
+
+                toast("Tarefa concluída. #" + id, "success");
+
+                listarTarefas();
+            }
+
+            async function addTarefa(){
+                const request = await fetch("/api/tarefa", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        descricao: descricao.value
+                    })
+                });
+                const dados = await request.json()
+
+                toast("Tarefa adicionada. #" + dados.tarefaCadastrada, "success");
+                listarTarefas();
+            }
+
+            async function editarTarefa() {
+                const request = await fetch("/api/tarefa/" + tarefaEditando["pk_tarefa"], {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        descricao: document.getElementById("descricaoEditar").value
+                    })
+                });
+                const dados = await request.json()
+
+                toast("Tarefa editada. #" + dados.tarefaEditada, "success");
+                const modal = bootstrap.Modal.getInstance(document.getElementById("editarModal"));
+                modal.hide();
+                listarTarefas();
+            }
+
+            function abrirModal(tarefa){
+                tarefaEditando = tarefa;
+
+                document.getElementById("descricaoEditar").value = tarefa["descricao"];
+
+                const modal = new bootstrap.Modal(document.getElementById("editarModal"));
+                modal.show();
+            }
+
+            function toast(mensagem, tipo = 'success') {
+                const cores = {
+                    success: 'text-bg-success',
+                    danger: 'text-bg-danger',
+                    warning: 'text-bg-warning',
+                    info: 'text-bg-info'
+                };
+
+                const toastHTML = `
+                    <div class="toast align-items-center ${cores[tipo] || cores.success} border-0"
+                        role="alert"
+                        aria-live="assertive"
+                        aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                ${mensagem}
+                            </div>
+
+                            <button type="button"
+                                    class="btn-close btn-close-white me-2 m-auto"
+                                    data-bs-dismiss="toast">
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                let container = document.getElementById('toastContainer');
+
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toastContainer';
+                    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                    document.body.appendChild(container);
+                }
+
+                container.insertAdjacentHTML('beforeend', toastHTML);
+
+                const elemento = container.lastElementChild;
+                const instancia = bootstrap.Toast.getOrCreateInstance(elemento, {
+                    delay: 3000
+                });
+
+                instancia.show();
+
+                elemento.addEventListener('hidden.bs.toast', () => {
+                    elemento.remove();
+                });
+            }
+
+            button.onclick = addTarefa;
+            listarTarefas();
+        </script>
     </body>
 </html>
