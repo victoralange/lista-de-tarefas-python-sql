@@ -1,22 +1,70 @@
 import sqlite3
-import math
 
-conexao = sqlite3.connect("banco.db")
-conexao.row_factory = sqlite3.Row
+def conectar():
+    conexao = sqlite3.connect("banco.db")
+    conexao.row_factory = sqlite3.Row
 
-cursor = conexao.cursor()
+    cursor = conexao.cursor()
 
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tarefas (
-        pk_tarefa INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        descricao TEXT NOT NULL,
-        concluida INTEGER DEFAULT 0
-    )
-""")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tarefas (
+            pk_tarefa INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            descricao TEXT NOT NULL,
+            concluida INTEGER DEFAULT 0
+        )
+    """)
 
-conexao.commit()
+    conexao.commit()
+    return conexao
+
+def adicionarTarefa(tarefa):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    try:
+        cursor.execute("INSERT INTO tarefas (descricao) VALUES (?)", (tarefa["descricao"],))
+
+        conexao.commit()
+
+        return {
+            "sucesso": True,
+            "tarefaCadastrada": cursor.lastrowid
+        }
+    except sqlite3.Error as erro:
+        return {
+            "sucesso": False,
+            "erro": str(erro)
+        }
+    finally:
+        conexao.close()
+
+def buscarTarefa(id: int):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    try:
+        tarefa = cursor.execute(
+            "SELECT * FROM tarefas WHERE pk_tarefa = ?",
+            (id,)
+        ).fetchone()
+
+        return {
+            "sucesso": True,
+            "tarefa": dict(tarefa) if tarefa else None
+        }
+
+    except sqlite3.Error as erro:
+        return {
+            "sucesso": False,
+            "erro": str(erro)
+        }
+    finally:
+        conexao.close()
 
 def buscarTarefas(apenasPendentes=False):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
     try:
         if apenasPendentes:
             tarefas = cursor.execute(
@@ -27,133 +75,102 @@ def buscarTarefas(apenasPendentes=False):
                 "SELECT * FROM tarefas"
             )
 
-        return tarefas.fetchall()
+        return {
+            "sucesso": True,
+            "tarefas": [dict(tarefa) for tarefa in tarefas.fetchall()]
+        }
 
-    except sqlite3.Error:
-        return False
+    except sqlite3.Error as erro:
+        return {
+            "sucesso": False,
+            "erro": str(erro)
+        }
+    finally:
+        conexao.close()
 
-def alterarTarefa(idTarefa):
+def concluirTarefa(idTarefa):
+    conexao = conectar()
+    cursor = conexao.cursor()
+    
     try:
         tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
         if tarefa is None or tarefa["concluida"] == 1:
-            return False
+            return {
+                "sucesso": False,
+                "erro": "Tarefa não existe ou já foi concluida."
+            }
         
         cursor.execute("UPDATE tarefas SET concluida = 1 WHERE pk_tarefa = ?", (idTarefa,))
         conexao.commit()
 
-        return True
+        return {
+            "sucesso": True,
+            "tarefaConcluida": idTarefa
+        }
     except sqlite3.Error as erro:
-        return False
+        return {
+            "sucesso": False,
+            "erro": str(erro)
+        }
+    finally:
+        conexao.close()
 
-def editarTarefa(idTarefa, descricaoTarefa):
+def editarTarefa(idTarefa, dados):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
     try:
-        tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
-        if tarefa is None or tarefa["concluida"] == 1:
-            return False
-        
+        tarefa = cursor.execute(
+            "SELECT * FROM tarefas WHERE pk_tarefa = ?",
+            (idTarefa,)
+        ).fetchone()
+
+        if tarefa is None:
+            return {
+                "sucesso": False,
+                "erro": "Tarefa não existe."
+            }
+
         cursor.execute(
             "UPDATE tarefas SET descricao = ? WHERE pk_tarefa = ?",
-            (descricaoTarefa, idTarefa)
-        )        
+            (dados["descricao"], idTarefa)
+        )
 
         conexao.commit()
 
-        return True
+        return {
+            "sucesso": True,
+            "tarefaEditada": idTarefa
+        }
+
     except sqlite3.Error as erro:
-        return False
+        return {
+            "sucesso": False,
+            "erro": str(erro)
+        }
+    finally:
+        conexao.close()
 
 def deletarTarefa(idTarefa):
+    conexao = conectar()
+    cursor = conexao.cursor()
+    
     try:
         tarefa = cursor.execute("SELECT * FROM tarefas WHERE pk_tarefa = ?", (idTarefa, )).fetchone()
         if tarefa is None:
-            return False
+            return {
+                "sucesso": False,
+                "erro": "Tarefa não existe ou já foi deletada."
+            }
         
         cursor.execute("DELETE FROM tarefas WHERE pk_tarefa = ?", (idTarefa,))
         conexao.commit()
 
         return True
     except sqlite3.Error as erro:
-        return False
-
-while True:
-    opcao = int(input("""======================
-Lista de tarefas.
-======================
-
-1- Adicionar tarefa
-2 - Listar tarefas
-3 - Concluir tarefa
-4 - Excluir tarefa
-5 - Editar tarefa
-6 - Sair
-
-Escolha uma opção: """))
-
-    match opcao:
-        case 1:
-            try:
-                tarefa = input("\n\nDigite a tarefa: ")
-                
-                cursor.execute("INSERT INTO tarefas (descricao) VALUES (?)", (tarefa,))
-                conexao.commit()
-    
-                print("\nTarefa cadastrada.\n")
-            except sqlite3.Error as erro:
-                print(f"\nErro ao cadastrar tarefa: {erro}.")
-        case 2:
-            tarefas = buscarTarefas()
-
-            if(len(tarefas) == 0):
-                print("\n\nNão há tarefas cadastradas.")
-
-            print("\n")
-            for tarefa in tarefas:
-                print(f"{tarefa["pk_tarefa"]} - {tarefa["descricao"]} - { "Concluída" if tarefa["concluida"] == 1 else "Pendente" }")
-
-            print("\n")
-        case 3:
-            tarefas = buscarTarefas(True)
-
-            print("\n\n")
-            for tarefa in tarefas:
-                print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
-
-            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para concluí-la: "))
-
-            if(alterarTarefa(tarefaSelecionada)):
-                print("Tarefa alterada com sucesso!\n")
-            else:
-                print("Tarefa inexistente ou já concluída.\n")            
-
-        case 4:
-            tarefas = buscarTarefas()
-
-            for tarefa in tarefas:
-                print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
-
-            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para deletá-la: "))
-
-            if(deletarTarefa(tarefaSelecionada)):
-                print("Tarefa deletada com sucesso!\n")
-            else:
-                print("Tarefa inexistente ou já deletada.\n")      
-
-        case 5:
-            tarefas = buscarTarefas(True)
-
-            print("\n\n")
-            for tarefa in tarefas:
-                print(f"ID: {tarefa["pk_tarefa"]} - {tarefa["descricao"]}")
-
-            tarefaSelecionada = int(input("\n\nInforme o identificador da tarefa para editá-la: "))
-
-            novaDescricao = input("Digite a nova descrição da tarefa: ")
-            
-            if(editarTarefa(tarefaSelecionada, novaDescricao)):
-                print("Tarefa editada com sucesso!\n")
-            else:
-                print("Erro ao editar.\n")            
-        case 6:
-            print("Programa encerrado.")
-            conexao.close()
-            break     
+        return {
+            "sucesso": False,
+            "erro": str(erro)
+        }
+    finally:
+        conexao.close()
