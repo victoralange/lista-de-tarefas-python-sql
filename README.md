@@ -31,4 +31,4 @@ O sistema permite cadastrar, listar, concluir, editar e excluir tarefas por meio
 * **Delete** - Deletar tarefas
 
 ## Objetivo
-Projeto desenvolvido com finalidade de estudo e prática de conceitos como funções, condicionais, estruturas de repetição, tratamento de erros, SQL, Flask, APIs Rest, SQLite e operações CRUD.
+Projeto desenvolvido com finalidade de estudo e prática de conceitos como funções, condicionais, estruturas de repetição, tratamento de erros, SQL, Flask, APIs Rest, SQLite e operações CRUD. 
