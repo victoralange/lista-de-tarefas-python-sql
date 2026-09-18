@@ -30,5 +30,45 @@ O sistema permite cadastrar, listar, concluir, editar e excluir tarefas por meio
 * **Update** - Editar e concluir tarefas
 * **Delete** - Deletar tarefas
 
+<div>
+
+## Como usar
+
+</div>
+
+<div style="border: 1px solid #30363d; border-radius: 10px; padding: 20px;">
+
+### 1. Acesse o arquivo `app.py`
+
+Abra o projeto no seu editor de código e localize o arquivo:
+
+```text
+app.py
+```
+
+### 2. Execute o sistema
+
+No terminal, dentro da pasta do projeto, execute:
+
+```bash
+python app.py
+```
+
+
+### 3. Acesse a aplicação
+
+Após executar o `app.py`, o Flask iniciará o servidor local.
+
+No terminal será exibido o endereço da aplicação. Normalmente:
+
+```text
+http://127.0.0.1:5000
+```
+
+Abra esse endereço no navegador para utilizar a API.
+
+</div>
+
+
 ## Objetivo
 Projeto desenvolvido com finalidade de estudo e prática de conceitos como funções, condicionais, estruturas de repetição, tratamento de erros, SQL, Flask, APIs Rest, SQLite e operações CRUD. 
