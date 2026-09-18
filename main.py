@@ -68,11 +68,11 @@ def buscarTarefas(apenasPendentes=False):
     try:
         if apenasPendentes:
             tarefas = cursor.execute(
-                "SELECT * FROM tarefas WHERE concluida = 0"
+                "SELECT * FROM tarefas WHERE concluida = 0 ORDER BY pk_tarefa DESC"
             )
         else:
             tarefas = cursor.execute(
-                "SELECT * FROM tarefas"
+                "SELECT * FROM tarefas ORDER BY concluida ASC, pk_tarefa DESC"
             )
 
         return {
